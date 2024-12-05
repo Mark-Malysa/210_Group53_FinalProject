@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 import json
+import random
 
 def init_life_state_3(n, m, p_list, states):
     """
@@ -72,3 +73,64 @@ life_state = init_life_state_3(n, m, probabilities, states)
 draw_life_state_3(life_state, state_colors)
 
 
+def update_life_state_3(life_state, rules_dict, out_life_state=None):
+    """
+    Update the grid based on the rules specified for each state (removed, susceptible, infected).
+    
+    IN: 
+        life_state (ndarray): 2D array representing the current state of the cells.
+        rules_dict (dict): The dictionary containing the rules for each state.
+        out_life_state (ndarray, optional): 2D array to store the next state. If None, a new array is created.
+        
+    OUT: 
+        ndarray: The updated 2D array representing the next state of the cells.
+    """
+    
+    n, m = life_state.shape  # Get the grid dimensions
+    
+    if out_life_state is None:
+        out_life_state = np.copy(life_state)  # Initialize the output state with the current state
+    
+    # Define neighbor offsets for the 8 neighboring cells (N, NE, E, SE, S, SW, W, NW)
+    neighbors_offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+
+    for i in range(n):
+        for j in range(m):
+            current_state = life_state[i, j]  # Current state of the cell
+
+            if current_state == 0:  # Removed cell
+                # Removed cells always stay removed (no change)
+                continue
+
+            elif current_state == 1:  # Susceptible cell
+                # Find infected neighbors
+                infected_neighbors = 0
+                for di, dj in neighbors_offsets:
+                    ni, nj = i + di, j + dj
+                    if 0 <= ni < n and 0 <= nj < m and life_state[ni, nj] == 2:
+                        infected_neighbors += 1
+
+                # Apply the susceptible-to-infected rule based on infected neighbors
+                susceptible_rule = rules_dict[1][0]['neighbor_to']
+                for condition in susceptible_rule['if']:
+                    # Check if the number of infected neighbors is within the specified range
+                    if condition["at_least"] <= infected_neighbors <= condition["at_most"]:
+                        # Apply the probability of getting infected
+                        probabilities = rules_dict[1][0]['neighbor_to']['then']['probability']
+                        for prob in probabilities:
+                            if random.random() < prob['value']:
+                                # Update the cell's state based on the probability
+                                out_life_state[i, j] = prob['then']['turn_to']
+                                break
+                        #---comment---
+
+            elif current_state == 2:  # Infected cell
+                # Apply the infected-to-removed or infected-to-infected rule based on probabilities
+                infected_rule = rules_dict[2][0]['probability']
+                for prob in infected_rule:
+                    if random.random() < prob['value']:
+                        out_life_state[i, j] = prob['then']['turn_to']
+                        break
+                        #---comment---
+                    
+    return out_life_state
