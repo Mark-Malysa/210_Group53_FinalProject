@@ -66,22 +66,44 @@ state_colors = {
 }
 
 # Initialize the grid
-n, m = 20, 20
+n, m = 10, 10
 life_state = init_life_state_3(n, m, probabilities, states)
 
 # Draw the grid
-draw_life_state_3(life_state, state_colors)
+#uncomment to see the grid and test the above functions
+#draw_life_state_3(life_state, state_colors)
 
-def get_neighbors(i, j, n, m):
+#helper function that returns the number of neighbors that match the given type
+def get_neighbors(life_state, i, j, n, m, type):
     neighbors_offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-    neighbors = []
-
+    count_of_type = 0;
     for di, dj in neighbors_offsets:
         ni, nj = i + di, j + dj
         if 0 <= ni < n and 0 <= nj < m:
-            neighbors.append((ni, nj))
+            if life_state[ni, nj] == type:
+                count_of_type += 1
+    return count_of_type
 
-    return neighbors
+#helper function that uses the probabilities to decide which state to return
+def handle_probabilities_rule(rule, current_state = 0):
+    dict_of_probs = {}
+    prev_value = 0
+    for prob in rule:
+        dict_of_probs[prob['then']["turn_to"] ] = prev_value + prob['value']
+
+    #sort the probabilities in ascending order based on value
+    dict_of_probs = {k: v for k, v in sorted(dict_of_probs.items())}
+    #make it so that each value is the sum of all previous values
+    for turn_to, prob in dict_of_probs.items():
+        dict_of_probs[turn_to] = prob + prev_value
+        prev_value = prob+prev_value
+
+    random_value = random.uniform(0, 1)
+    for ret, prob in dict_of_probs.items():
+        if random_value < prob:
+            return ret
+    
+    return "error"
 
 def update_life_state_3(life_state, rules_dict, out_life_state=None):
     """
@@ -100,53 +122,39 @@ def update_life_state_3(life_state, rules_dict, out_life_state=None):
     if out_life_state is None:
         out_life_state = np.copy(life_state)  # Initialize the output state with the current state
 
+    # Iterate over each cell in the grid
     for i in range(n):
         for j in range(m):
             current_state = life_state[i, j]  # Current state of the cell
-
             # Get the rules for the current state of the cell
-            if current_state in rules_dict:
-                # Process all rule sets for the current state
-                rules_for_current_state = rules_dict[current_state]
-                for rule in rules_for_current_state:
+            if current_state in rules_dict:  # Check if the current state is in the rules_dict:
+                rules = rules_dict[current_state]
+                for rule in rules:
                     # Handle neighbor-based transitions (if applicable)
                     if 'neighbor_to' in rule:
-                        neighbors = get_neighbors(i, j, n, m)  # Get neighboring cells' coordinates
-                        infected_neighbors = 0
-                        for ni, nj in neighbors:
-                            if life_state[ni, nj] == 2:  # If we have an infected cell as a neighbor (for example)
-                                infected_neighbors += 1
-                        
-                        # Now check the condition for neighbor-based transition
-                        condition = rule['neighbor_to']
-                        if 'if' in condition:
-                            for neighbor_condition in condition['if']:
-                                if neighbor_condition['at_least'] <= infected_neighbors <= neighbor_condition['at_most']:
-                                    # We apply the corresponding transition based on probabilities
-                                    probabilities = condition['then']['probability']
-                                    rand_val = random.random()
-                                    cumulative_prob = 0.0
-                                    
-                                    # Select the transition based on cumulative probabilities
-                                    for prob in probabilities:
-                                        cumulative_prob += prob['value']
-                                        if rand_val < cumulative_prob:
-                                            out_life_state[i, j] = prob['then']['turn_to']
-                                            break
-
-                    # Handle probability-based transitions (if applicable)
+                        curr_rule = rule['neighbor_to']
+                        curr_rule_if = curr_rule['if']
+                        curr_rule_then = curr_rule['then']
+                        #checks if the number of neighbors is within the range
+                        neighbors = get_neighbors(life_state, i, j, n, m, current_state)
+                        if neighbors >= curr_rule_if[0]['at_least'] and neighbors <= curr_rule_if[0]['at_most']:
+                            curr_rule = curr_rule_then
+                            # Handle probability-based transitions in neighbor-based transitions
+                            if 'probability' in curr_rule:
+                                probabilitys = curr_rule['probability']
+                                out_life_state[i, j] = handle_probabilities_rule(probabilitys ,current_state)
+                            # Handle turn-to transitions in neighbor-based transitions
+                            elif 'turn_to' in curr_rule:
+                                out_life_state[i, j] = curr_rule['turn_to']
+                    # Handle probability-based transitions
                     elif 'probability' in rule:
-                        probabilities = rule['probability']
-                        rand_val = random.random()
-                        cumulative_prob = 0.0
+                        probabilitys = rule['probability']
+                        out_life_state[i, j] = handle_probabilities_rule(probabilitys)
+                    # Handle turn-to transitions
+                    elif 'turn_to' in rule:
+                        out_life_state[i, j] = rule['turn_to']
                         
-                        # Apply the transition based on cumulative probabilities
-                        for prob in probabilities:
-                            cumulative_prob += prob['value']
-                            if rand_val < cumulative_prob:
-                                out_life_state[i, j] = prob['then']['turn_to']
-                                break
-
+    #returns the updated life_state
     return out_life_state
 
 # Example usage:
@@ -169,13 +177,13 @@ rules = {
                 "then": {
                     "probability": [  # 25% chance of getting infected and 75% chance of staying susceptible
                         {
-                            "value": 0.25,  # Transmission rate 25%
+                            "value": 0.9,  # Transmission rate 25%
                             "then": {
                                 "turn_to": 2  # Turn to infected
                             },
                         },
                         {
-                            "value": 0.75,  # Leftover 75%
+                            "value": 0.1,  # Leftover 75%
                             "then": {
                                 "turn_to": 1  # Stay susceptible
                             }
@@ -205,9 +213,10 @@ rules = {
     ]
 }
 
-
-updated_state = update_life_state_3(life_state, rules)
-draw_life_state_3(updated_state, state_colors)
+#example usage
+#uncomment to see the grid and test the above functions
+#updated_state = update_life_state_3(life_state, rules)
+#draw_life_state_3(updated_state, state_colors)
 
 def save_state_to_csv(state, filename):
     with open(filename, mode='w', newline='') as file:
@@ -222,7 +231,7 @@ def load_rules_from_json(filename):
 
 # Main function to run the game
 def play_game_of_life_3():
-    # Step 1: Ask the user for initial state parameters
+    #Ask the user for initial state parameters
     n = int(input("Enter number of rows: "))
     #input check
     while not isinstance(n, int):
@@ -237,6 +246,11 @@ def play_game_of_life_3():
     #input check
     while not all(0 <= p <= 1 for p in p_list):
         p_list = list(map(float, input("Invalid input for probabilities. Please enter decimal numbers between 0 and 1 (comma separated): ").split(',')))
+    
+    colors = list(map(str, input("Enter the colors for each state (comma separated): ").split(',')))
+    #input check
+    while not all(isinstance(color, str) for color in colors):        
+        colors = list(map(str, input("Invalid input for colors. Please enter strings (comma separated): ").split(',')))
 
     states = list(map(int, input("Enter the states (comma separated): ").split(',')))
     #input check
@@ -244,27 +258,29 @@ def play_game_of_life_3():
         states = list(map(int, input("Invalid input for states. Please enter integers (comma separated): ").split(',')))
 
     # Generate the initial life state randomly based on probabilities
-    life_state = np.random.choice(states, size=(n, m), p=p_list)
+    life_state = init_life_state_3(n, m, p_list, states)
 
-    # Step 2: Ask the user for the rules file (JSON)
+    #Ask the user for the rules file (JSON)
     rules_file = input("Enter the JSON file path for the rules: ")
     rules = load_rules_from_json(rules_file)
-
-    # Step 3: Ask the user for the number of iterations
+    rules = {int(key): value for key, value in rules.items()}
+    #Ask the user for the number of iterations
     iterations = int(input("Enter the number of iterations: "))
 
-    # Step 4: Display and update the grid for each iteration
+    #Display the initial state
+    draw_life_state_3(life_state, colors={state: color for state, color in zip(states, colors)})
+    #Display and update the grid for each iteration
     for i in range(iterations):
         print(f"Iteration {i + 1}:")
-        draw_life_state_3(life_state, colors={state: color for state, color in zip(states, ['red', 'blue', 'green'])})  # Add any custom colors
         life_state = update_life_state_3(life_state, rules)
+        draw_life_state_3(life_state, colors={state: color for state, color in zip(states, colors)})
 
         # Ask user if they want to continue
         continue_game = input("Do you want to continue to the next iteration? (y/n): ")
         if continue_game.lower() != 'y':
             break
     
-    # Step 5: Ask if the user wants to save the initial and final states
+    #Ask if the user wants to save the initial and final states
     save_choice = input("Do you want to save the initial and final states as CSV files? (y/n): ")
     if save_choice.lower() == 'y':
         initial_filename = input("Enter the filename for the initial state (CSV): ")
@@ -272,7 +288,7 @@ def play_game_of_life_3():
         save_state_to_csv(life_state, final_filename)
         save_state_to_csv(life_state, initial_filename)  # Assuming user wants to save the same state
 
-    # Step 6: Ask if the user wants to save the rules
+    #Ask if the user wants to save the rules
     save_rules_choice = input("Do you want to save the rules as a JSON file? (y/n): ")
     if save_rules_choice.lower() == 'y':
         rules_filename = input("Enter the filename to save the rules as JSON: ")
@@ -281,4 +297,4 @@ def play_game_of_life_3():
 
     print("Game Over.")
 
-    
+play_game_of_life_3()
