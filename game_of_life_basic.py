@@ -18,6 +18,8 @@ def init_life_state_1(n, m, p):
     return np.random.rand(n, m) < p
 
 
+#given function from the assignment to draw the cell colors
+#modified to display the grid
 def draw_cell_background(x, y):
     plt.fill([x-0.5, x-0.5, x+0.5, x+0.5], [y-0.5, y+0.5, y+0.5, y-0.5], color='lightgray', edgecolor='black')
 
@@ -43,11 +45,9 @@ def draw_life_state_1(life_state):
     
     # Add axis labels  
     plt.title('Game of Life')
-    
     plt.axis('off')
     #add grid
     plt.show()
-
 
 #helper function that returns the number of alive neighbors
 def count_neighbors(i, j, life_state):
@@ -192,6 +192,6 @@ def play_game_of_life_1():
         else:
             print("Invalid input:")
 
-# Example usage:
+# Example usage 1.4:
 #This will prompt the user to interact with the game of life.
 play_game_of_life_1()

@@ -1,0 +1,12 @@
+The following Github Repository is a demonstration of Conwey's Game of Life
+The repo is primarly divided into 3 python files that each demonstrate a more complex version of the game.
+
+Level1 (game_of_life_basic.py)
+To run this program simply run the file and enter the user prompted information in the terminal. After the first iteration of the grid is displayed, to view the next iteration close the currect one and the next will automatically display. After the iterations are ran it will prompt u with the choice to save the initial and final state in a csv
+
+Level 2 (game_of_life_level2.py)
+To run this program simply run the file and enter the user prompted information in the terminal. This version is slightly more enhanced as it offers a user with the option to modify certain values such as the number of neighbors for overcrowding or lonliness. After the first iteration of the grid is displayed, to view the next iteration close the currect one and the next will automatically display. After the iterations are ran it will prompt u with the choice to save the initial and final state in a csv
+
+Level 3 (game_of_life_level3.py)
+To run this program simply run the file and enter the user prompted information in the terminal. This version is even more enhanced as it offers a user with the option to enter their own rules in the form of a json file. An example of such a json file can be found in "sample_rules.json". This file demonstrates the simplest and most advanced structure of rules that this level can process. After the first iteration of the grid is displayed, to view the next iteration close the currect one and the next will automatically display. After the iterations are ran it will prompt u with the choice to save the initial and final state in a csv
+

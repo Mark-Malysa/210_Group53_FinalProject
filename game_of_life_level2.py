@@ -50,9 +50,9 @@ def draw_life_state_2(life_state):
     plt.show()
 
 # Example usage 2.1 (same as for 1.1):
-n, m, p = 20, 30, 0.1  # 20 rows, 30 columns, 20% chance of being alive
-life_state = init_life_state_2(n, m, p)
-draw_life_state_2(life_state)
+# n, m, p = 20, 30, 0.1  # 20 rows, 30 columns, 20% chance of being alive
+# life_state = init_life_state_2(n, m, p)
+# draw_life_state_2(life_state)
 
 
 
@@ -114,8 +114,8 @@ def update_life_state_2(life_state, b1=3, b2=3, d1=2, d2=3, out_life_state=None)
     return out_life_state
 
 #test for update_life_state task 2.2 and 2.3
-new_life_state = update_life_state_2(life_state)
-draw_life_state_2(new_life_state)
+# new_life_state = update_life_state_2(life_state)
+# draw_life_state_2(new_life_state)
 
 
 def save_to_csv(life_state, filename):
