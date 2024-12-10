@@ -45,11 +45,9 @@ def draw_life_state_1(life_state):
     
     # Add axis labels  
     plt.title('Game of Life')
-    
     plt.axis('off')
     #add grid
     plt.show()
-
 
 #helper function that returns the number of alive neighbors
 def count_neighbors(i, j, life_state):
