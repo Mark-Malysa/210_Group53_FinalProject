@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
-def init_life_state_1(n, m, p):
+def init_life_state_1(n, m, p, life_state = None):
     """
     Generate an initial random subset of life cells (2D points).
     
@@ -15,7 +15,10 @@ def init_life_state_1(n, m, p):
         ndarray of shape (n, m), initial state of the cells where 1 represents alive, 0 represents dead.
     """
     # Generate a random grid of shape (n, m) with values from 0 to 1 and if the value is less than p, set the cell to 1 and otherwise 0
-    return np.random.rand(n, m) < p
+    if life_state is None:
+        return np.random.rand(n, m) < p
+    else:
+        return life_state
 
 
 #given function from the assignment to draw the cell colors
@@ -117,7 +120,7 @@ def save_to_csv(life_state, filename):
     np.savetxt(filename, life_state, delimiter=',', fmt='%d')
 
 
-def play_game_of_life_1():
+def play_game_of_life_1(life_state = None): 
     """
     Play the game of life by updating the grid based on user input.
     IN: None
@@ -142,8 +145,10 @@ def play_game_of_life_1():
         p = float(input("Invalid input for probability. Please enter a decimal number between 0 and 1."))
 
     # Initialize the grid
-    life_state = init_life_state_1(n, m, p)
-    
+    if life_state is None:
+        life_state = init_life_state_1(n, m, p)
+    else:
+        life_state = life_state
     # ask the user for the number of iterations
     num_iterations = int(input("Enter the number of iterations to run (must be an integer): "))
     #input check
@@ -194,4 +199,15 @@ def play_game_of_life_1():
 
 # Example usage 1.4:
 #This will prompt the user to interact with the game of life.
+
+#extra feature
+#User input can be used for a set grid if its just entered in an an argument
+# grid = np.zeros((20,20))
+# grid[10][10] = 1
+# grid[9][10]= 1
+# grid[11][10] = 1
+# grid[10][11] = 1
+# grid[10][9] = 1
+#play_game_of_life_1(grid)
+
 play_game_of_life_1()
